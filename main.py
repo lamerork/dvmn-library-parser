@@ -1,3 +1,4 @@
+import argparse
 import os
 from bs4 import BeautifulSoup
 import requests
@@ -11,7 +12,7 @@ def check_for_redirect(response):
         raise requests.HTTPError()
 
 
-def parse_book_page(response):
+def parse_book_page(response, book_id):
 
     soup = BeautifulSoup(response.text, 'lxml')
 
@@ -23,11 +24,12 @@ def parse_book_page(response):
     comments = [comment_tag.text for comment_tag in comment_tags]
     genres_tags = soup.select('span.d_book a')
     genres = [genres_tag.text for genres_tag in genres_tags]
-    
+
     image_url = urljoin('https://tululu.org', soup.select_one('.bookimage img')['src'])
 
 
     book = {
+            'book_id': book_id,
             'book_name': book_name,
             'author': book_autor,
             'comments': comments,
@@ -37,14 +39,14 @@ def parse_book_page(response):
     return book
 
 
-def get_books():
+def get_books(start_id, end_id):
 
-    for book_id in range(11):
+    for book_id in range(start_id, end_id):
         try:
             response = requests.get(f'https://tululu.org/b{book_id}/')
             response.raise_for_status()
             check_for_redirect(response)
-            book = parse_book_page(response)
+            book = parse_book_page(response, book_id)
             print(book['book_name'])
             print(book['genres'])
             download_txt(f'https://tululu.org/txt.php?id={book_id}', f'{book_id}. {book["book_name"]}')
@@ -80,8 +82,14 @@ def download_image(image_url, folder='images'):
 
 
 def main():
-  
-    get_books()
+    
+    parser = argparse.ArgumentParser(description='Парсер книг')
+    parser.add_argument('--start_id', help='Введите стартовый id', default=1, type=int)
+    parser.add_argument('--end_id', help='Введите конечный id', default=10, type=int)
+    arguments = parser.parse_args()
+    start_id = arguments.start_id
+    end_id = arguments.end_id
+    get_books(start_id, end_id)
 
 
 if __name__ == '__main__':
