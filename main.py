@@ -41,7 +41,7 @@ def parse_book_page(response, book_id):
 
 def get_books(start_id, end_id):
 
-    for book_id in range(start_id, end_id):
+    for book_id in range(start_id, end_id + 1):
         try:
             response = requests.get(f'https://tululu.org/b{book_id}/')
             response.raise_for_status()
@@ -51,7 +51,7 @@ def get_books(start_id, end_id):
             print(book['genres'])
             download_txt(f'https://tululu.org/txt.php?id={book_id}', f'{book_id}. {book["book_name"]}')
             download_image(book['image_url'])
-            
+
         except requests.exceptions.HTTPError:
             pass
 
