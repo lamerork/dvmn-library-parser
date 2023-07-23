@@ -35,7 +35,7 @@ def parse_book_page(response, book_id):
             'comments': comments,
             'image_url': image_url,
             'genres': genres
-    }
+            }
     return book
 
 
@@ -70,6 +70,7 @@ def download_txt(url, filename, folder='books'):
 
     return file_path
 
+
 def download_image(image_url, folder='images'):
 
     parser_url = urlparse(image_url)
@@ -82,7 +83,7 @@ def download_image(image_url, folder='images'):
 
 
 def main():
-    
+
     parser = argparse.ArgumentParser(description='Парсер книг')
     parser.add_argument('--start_id', help='Введите стартовый id', default=1, type=int)
     parser.add_argument('--end_id', help='Введите конечный id', default=10, type=int)
