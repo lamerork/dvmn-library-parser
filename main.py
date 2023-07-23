@@ -11,19 +11,30 @@ def check_for_redirect(response):
         raise requests.HTTPError()
 
 
-def parse_book(response):
+def parse_book_page(response):
 
     soup = BeautifulSoup(response.text, 'lxml')
 
-    book_name_parsed = soup.select_one('h1')
-    comments = soup.select('.texts .black')
-    genres = soup.select('span.d_book a')
-    for genre in genres:
-        print(genre.text)
- #   for comment in comments:    
- #       print(comment.text)
-    return book_name_parsed.text.split(' \xa0 :: \xa0 ')[0] , urljoin('https://tululu.org', soup.select_one('.bookimage img')['src'])
-  
+    header_text = soup.select_one('h1').text
+    book_name, book_autor = header_text.split('::')
+    book_name = book_name.strip()
+    book_autor = book_autor.strip()
+    comment_tags = soup.select('.texts .black')
+    comments = [comment_tag.text for comment_tag in comment_tags]
+    genres_tags = soup.select('span.d_book a')
+    genres = [genres_tag.text for genres_tag in genres_tags]
+    
+    image_url = urljoin('https://tululu.org', soup.select_one('.bookimage img')['src'])
+
+
+    book = {
+            'book_name': book_name,
+            'author': book_autor,
+            'comments': comments,
+            'image_url': image_url,
+            'genres': genres
+    }
+    return book
 
 
 def get_books():
@@ -33,10 +44,11 @@ def get_books():
             response = requests.get(f'https://tululu.org/b{book_id}/')
             response.raise_for_status()
             check_for_redirect(response)
-            book_name, image_url = parse_book(response)
-            print(book_id, book_name)
- #           download_txt(f'https://tululu.org/txt.php?id={book_id}', f'{book_id}. {parse_book(response)}')
- #           download_image(image_url)
+            book = parse_book_page(response)
+            print(book['book_name'])
+            print(book['genres'])
+            download_txt(f'https://tululu.org/txt.php?id={book_id}', f'{book_id}. {book["book_name"]}')
+            download_image(book['image_url'])
             
         except requests.exceptions.HTTPError:
             pass
@@ -58,13 +70,10 @@ def download_txt(url, filename, folder='books'):
 
 def download_image(image_url, folder='images'):
 
-
     parser_url = urlparse(image_url)
-    print(parser_url.path)
     Path(folder).mkdir(parents=True, exist_ok=True)
     response = requests.get(image_url)
     response.raise_for_status()
-    print(parser_url.path.split('/')[-1])
     file_path = os.path.join(folder, parser_url.path.split('/')[-1])
     with open(file_path, 'wb') as file:
         file.write(response.content)
