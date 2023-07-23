@@ -17,8 +17,11 @@ def parse_book(response):
 
     book_name_parsed = soup.select_one('h1')
     comments = soup.select('.texts .black')
-    for comment in comments:    
-        print(comment.text)
+    genres = soup.select('span.d_book a')
+    for genre in genres:
+        print(genre.text)
+ #   for comment in comments:    
+ #       print(comment.text)
     return book_name_parsed.text.split(' \xa0 :: \xa0 ')[0] , urljoin('https://tululu.org', soup.select_one('.bookimage img')['src'])
   
 
