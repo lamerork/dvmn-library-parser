@@ -47,8 +47,6 @@ def get_books(start_id, end_id):
             response.raise_for_status()
             check_for_redirect(response)
             book = parse_book_page(response, book_id)
-            print(book['book_name'])
-            print(book['genres'])
             download_txt(f'https://tululu.org/txt.php?id={book_id}', f'{book_id}. {book["book_name"]}')
             download_image(book['image_url'])
 
