@@ -13,7 +13,7 @@ def check_for_redirect(response):
         raise requests.HTTPError()
 
 
-def parse_book_page(response, book_id):
+def parse_book_page(response):
 
     soup = BeautifulSoup(response.text, 'lxml')
 
@@ -28,7 +28,6 @@ def parse_book_page(response, book_id):
     image_url = urljoin(response.url, soup.select_one('.bookimage img')['src'])
 
     book = {
-            'book_id': book_id,
             'book_name': book_name,
             'author': book_autor,
             'comments': comments,
@@ -41,9 +40,14 @@ def parse_book_page(response, book_id):
 def download_txt(url, book_id, filename, folder='books'):
 
     Path(folder).mkdir(parents=True, exist_ok=True)
+    try:
+        response = requests.get(url, params={'id': book_id})
+        response.raise_for_status()
+        check_for_redirect(response)
+    except requests.exceptions.HTTPError:
+        print(f'Ошибка скачивания книги')
+        return
 
-    response = requests.get(url, params={'id': book_id})
-    response.raise_for_status()
     file_path = os.path.join(folder, f'{sanitize_filename(filename)}.txt')
     with open(file_path, 'wb') as file:
         file.write(response.content)
@@ -57,6 +61,7 @@ def download_image(image_url, folder='images'):
     Path(folder).mkdir(parents=True, exist_ok=True)
     response = requests.get(image_url)
     response.raise_for_status()
+    check_for_redirect(response)
     file_path = os.path.join(folder, parser_url.path.split('/')[-1])
     with open(file_path, 'wb') as file:
         file.write(response.content)
@@ -65,8 +70,8 @@ def download_image(image_url, folder='images'):
 def main():
 
     parser = argparse.ArgumentParser(description='Парсер книг')
-    parser.add_argument('--start_id', help='Введите стартовый id', default=10, type=int)
-    parser.add_argument('--end_id', help='Введите конечный id', default=100, type=int)
+    parser.add_argument('--start_id', help='Введите стартовый id', default=1, type=int)
+    parser.add_argument('--end_id', help='Введите конечный id', default=10, type=int)
     arguments = parser.parse_args()
     start_id = arguments.start_id
     end_id = arguments.end_id
@@ -76,7 +81,7 @@ def main():
             response = requests.get(f'https://tululu.org/b{book_id}/')
             response.raise_for_status()
             check_for_redirect(response)
-            book = parse_book_page(response, book_id)
+            book = parse_book_page(response)
             download_txt('https://tululu.org/txt.php', book_id, f'{book_id}. {book["book_name"]}')
             download_image(book['image_url'])
 
