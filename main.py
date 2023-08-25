@@ -37,17 +37,9 @@ def parse_book_page(response):
     return book
 
 
-def download_txt(url, book_id, filename, folder='books'):
+def download_txt(response, filename, folder='books'):
 
     Path(folder).mkdir(parents=True, exist_ok=True)
-    try:
-        response = requests.get(url, params={'id': book_id})
-        response.raise_for_status()
-        check_for_redirect(response)
-    except requests.exceptions.HTTPError:
-        print(f'Ошибка скачивания книги')
-        return
-
     file_path = os.path.join(folder, f'{sanitize_filename(filename)}.txt')
     with open(file_path, 'wb') as file:
         file.write(response.content)
@@ -82,7 +74,12 @@ def main():
             response.raise_for_status()
             check_for_redirect(response)
             book = parse_book_page(response)
-            download_txt('https://tululu.org/txt.php', book_id, f'{book_id}. {book["book_name"]}')
+
+            response = requests.get('https://tululu.org/txt.php', params={'id': book_id})
+            response.raise_for_status()
+            check_for_redirect(response)
+
+            download_txt(response, f'{book_id}. {book["book_name"]}')
             download_image(book['image_url'])
 
         except requests.exceptions.HTTPError:
