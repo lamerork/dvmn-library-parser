@@ -19,7 +19,9 @@ def parse_book_url(response, page_url):
     return book_urls
 
 
-def parse_book_page(response, page_url):
+def parse_book_page(response):
+
+    txt_url = 'https://tululu.org/txt.php'
 
     soup = BeautifulSoup(response.text, 'lxml')
 
@@ -37,7 +39,7 @@ def parse_book_page(response, page_url):
 
     image_filename = soup.select_one('div.bookimage img')['src'].split('/')[-1]
     book_image_url = urljoin(response.url, soup.select_one('.bookimage img')['src'])
-    book_text_url = urljoin(page_url, soup.select_one('table.d_book a')['href'])
+    book_text_url = urljoin(txt_url, soup.select('table.d_book a')[-3]['href'])
 
     book_description = {
         'book_name': book_name,
@@ -82,10 +84,11 @@ def main():
             response = requests.get(book_url)
             response.raise_for_status()
             check_for_redirect(response)
-            book_description = parse_book_page(response, book_url)
+            book_description = parse_book_page(response)
             book_descriptions.append(book_description)
 
             response = requests.get(book_description['text_url'])
+        
             response.raise_for_status()
             check_for_redirect(response)
             if not arguments.skip_txt:
