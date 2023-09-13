@@ -6,6 +6,7 @@ import requests
 from urllib.parse import urljoin
 from tqdm import tqdm
 from colorama import Fore
+import logging
 from parse_tululu import download_txt, download_image, check_for_redirect, parse_book_page
 
 
@@ -21,33 +22,44 @@ def parse_catalog_page(response, page_url):
 
 def main():
 
+    logging.basicConfig(level=logging.INFO)
+
     book_urls = []
     book_descriptions = []
 
     parser = argparse.ArgumentParser(description='Скачивание и сохранение книг по категориям')
     parser.add_argument('--start_page', help='Номер начальной страницы', default=1, type=int)
     parser.add_argument('--end_page', help='Номер финальной страницы', default=2, type=int)
-    parser.add_argument('--skip_imgs', help='Не скачивать картинки', default=False, type=bool)
-    parser.add_argument('--skip_txt', help='Не скачивать книги', default=False, type=bool)
+    parser.add_argument('--skip_imgs', help='Не скачивать картинки', action='store_true')
+    parser.add_argument('--skip_txt', help='Не скачивать книги', action='store_true')
     parser.add_argument('--dest_folder', help='Не скачивать книги', default='books', type=str)
     arguments = parser.parse_args()
 
     pages = range(arguments.start_page, arguments.end_page + 1)
 
-    try:
-        for page in tqdm(pages,
-                        bar_format='%s{l_bar}%s{bar:50}%s{r_bar}' % (Fore.YELLOW, Fore.BLUE, Fore.YELLOW), 
-                        desc ='Получение ссылок'):
+    for page in tqdm(pages,
+                    bar_format='%s{l_bar}%s{bar:50}%s{r_bar}' % (Fore.YELLOW, Fore.BLUE, Fore.YELLOW), 
+                    desc ='Получение ссылок'):
 
-            category_page_url = f'https://tululu.org/l55/{page}'
+        category_page_url = f'https://tululu.org/l55/{page}'
+
+        try:
             category_page_response = requests.get(category_page_url)
             category_page_response.raise_for_status()
+            check_for_redirect(category_page_response)
             book_urls.extend(parse_catalog_page(category_page_response, category_page_url))
 
-        for book_url in tqdm(book_urls, 
-                            bar_format='%s{l_bar}%s{bar:50}%s{r_bar}' % (Fore.YELLOW, Fore.GREEN, Fore.YELLOW), 
-                            desc ='Скачивание книг'):
+        except requests.exceptions.HTTPError:
+            logging.info(f'Не удалось загрузить страницу: {page}')
 
+        except requests.exceptions.ConnectionError:
+            logging.info('Ожидаем соединение 60 секунд')
+            sleep(60)
+
+    for book_url in tqdm(book_urls, 
+                        bar_format='%s{l_bar}%s{bar:50}%s{r_bar}' % (Fore.YELLOW, Fore.GREEN, Fore.YELLOW), 
+                        desc ='Скачивание книг'):
+        try:
             response = requests.get(book_url)
             response.raise_for_status()
             check_for_redirect(response)
@@ -63,10 +75,12 @@ def main():
             if not arguments.skip_imgs:
                 download_image(book_description['image_url'], f'{arguments.dest_folder}/img')
 
-    except requests.exceptions.HTTPError:
-        pass
-    except requests.exceptions.ConnectionError:
-        sleep(60)
+        except requests.exceptions.HTTPError:
+            logging.info(f'Не удалось скачать книгу: {book_description["book_name"]}')
+
+        except requests.exceptions.ConnectionError:
+            logging.info('Ожидаем соединение 60 секунд')
+            sleep(60)
 
     with open(f'{arguments.dest_folder}/Catalog.json', 'w', encoding='utf8') as json_file:
         json.dump(book_descriptions, json_file,
