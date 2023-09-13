@@ -15,26 +15,36 @@ def check_for_redirect(response):
 
 def parse_book_page(response):
 
+    txt_url = 'https://tululu.org/txt.php'
+
     soup = BeautifulSoup(response.text, 'lxml')
 
     header_text = soup.select_one('h1').text
     book_name, book_autor = header_text.split('::')
+
     book_name = book_name.strip()
     book_autor = book_autor.strip()
-    comment_tags = soup.select('.texts .black')
-    comments = [comment_tag.text for comment_tag in comment_tags]
+
     genres_tags = soup.select('span.d_book a')
     genres = [genres_tag.text for genres_tag in genres_tags]
-    image_url = urljoin(response.url, soup.select_one('.bookimage img')['src'])
 
-    book = {
-            'book_name': book_name,
-            'author': book_autor,
-            'comments': comments,
-            'image_url': image_url,
-            'genres': genres
-            }
-    return book
+    comment_tags = soup.select('.texts .black')
+    comments = [comment_tag.text for comment_tag in comment_tags]
+
+    image_filename = soup.select_one('div.bookimage img')['src'].split('/')[-1]
+    book_image_url = urljoin(response.url, soup.select_one('.bookimage img')['src'])
+    book_text_url = urljoin(txt_url, soup.select('table.d_book a')[-3]['href'])
+
+    book_description = {
+        'book_name': book_name,
+        'author': book_autor,
+        'image_url': book_image_url,
+        'image_filename': image_filename,
+        'text_url': book_text_url,
+        'genres': genres,
+        'comments': comments,
+    }
+    return book_description
 
 
 def download_txt(response, filename, folder='books'):
