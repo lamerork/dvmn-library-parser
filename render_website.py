@@ -26,10 +26,12 @@ def rebuild_page():
     group_books = list(chunked(book_descriptions, 2))
     page_group_books = list(chunked(group_books, 10))
 
-    for page_number, page_books in enumerate(page_group_books, 1):
+    total_page = len(page_group_books)
 
-        rendered_page = template.render(group_books=page_books)
-        path_filename = os.path.join('pages', f'index{page_number}.html')
+    for number_page, page_books in enumerate(page_group_books, 1):
+
+        rendered_page = template.render(group_books=page_books, number_page=number_page, total_page=total_page)
+        path_filename = os.path.join('pages', f'index{number_page}.html')
         with open(path_filename, 'w', encoding="utf8") as file:
             file.write(rendered_page)
 
@@ -40,7 +42,7 @@ def main():
 
     server = Server()
     server.watch('template.html', rebuild_page)
-    server.serve(default_filename='pages/index1.html')
+    server.serve(root='', default_filename='pages/index1.html')
 
 
 if __name__ == '__main__':
