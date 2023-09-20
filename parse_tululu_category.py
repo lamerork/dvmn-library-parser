@@ -29,7 +29,7 @@ def main():
 
     parser = argparse.ArgumentParser(description='Скачивание и сохранение книг по категориям')
     parser.add_argument('--start_page', help='Номер начальной страницы', default=1, type=int)
-    parser.add_argument('--end_page', help='Номер финальной страницы', default=10, type=int)
+    parser.add_argument('--end_page', help='Номер финальной страницы', default=2, type=int)
     parser.add_argument('--skip_imgs', help='Не скачивать картинки', action='store_true')
     parser.add_argument('--skip_txt', help='Не скачивать книги', action='store_true')
     parser.add_argument('--dest_folder', help='Не скачивать книги', default='books', type=str)
