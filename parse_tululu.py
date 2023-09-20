@@ -34,6 +34,7 @@ def parse_book_page(response):
     image_filename = soup.select_one('div.bookimage img')['src'].split('/')[-1]
     book_image_url = urljoin(response.url, soup.select_one('.bookimage img')['src'])
     book_text_url = urljoin(txt_url, soup.select('table.d_book a')[-3]['href'])
+    txt_filename = f'{book_name}.txt'
 
     book_description = {
         'book_name': book_name,
@@ -41,6 +42,7 @@ def parse_book_page(response):
         'image_url': book_image_url,
         'image_filename': image_filename,
         'text_url': book_text_url,
+        'txt_filename': txt_filename,
         'genres': genres,
         'comments': comments,
     }
