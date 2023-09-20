@@ -1,7 +1,8 @@
 import os
 import json
+from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, select_autoescape
-from http.server import HTTPServer, SimpleHTTPRequestHandler
+from livereload import Server
 
 
 def get_book_descriptions():
@@ -10,24 +11,34 @@ def get_book_descriptions():
 
     with open(path_file, "r", encoding='utf-8') as books:
         books_pages = books.read()
-    books = json.loads(books_pages)
+    books_descriptions = json.loads(books_pages)
 
-    return books
+    return books_descriptions
 
 
-def main():
+def rebuild_page(folder='pages'):
     env = Environment(
         loader=FileSystemLoader(''),
         autoescape=select_autoescape(['html']))
 
+    Path(folder).mkdir(parents=True, exist_ok=True)
+
     template = env.get_template('template.html')
     rendered_page = template.render(books=get_book_descriptions())
 
-    with open('index.html', 'w', encoding="utf8") as file:
+    file_path = os.path.join(folder, 'index.html')
+
+    with open(file_path, 'w', encoding="utf8") as file:
         file.write(rendered_page)
 
-    server = HTTPServer(('0.0.0.0', 8000), SimpleHTTPRequestHandler)
-    server.serve_forever()
+
+def main():
+
+    rebuild_page()
+
+    server = Server()
+    server.watch('template.html', rebuild_page)
+    server.serve(root='pages')
 
 
 if __name__ == '__main__':
