@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from livereload import Server
+from more_itertools import chunked
 
 
 def get_book_descriptions():
@@ -24,7 +25,9 @@ def rebuild_page(folder='pages'):
     Path(folder).mkdir(parents=True, exist_ok=True)
 
     template = env.get_template('template.html')
-    rendered_page = template.render(books=get_book_descriptions())
+    book_descriptions = get_book_descriptions()
+    group_books = list(chunked(book_descriptions, 2))
+    rendered_page = template.render(group_books=group_books)
 
     file_path = os.path.join(folder, 'index.html')
 
