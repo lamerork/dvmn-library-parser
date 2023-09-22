@@ -65,4 +65,7 @@ Python3 должен быть уже установлен.
 ```bash
 >>>python parse_render_website.py --path_filename catalog.json --path_folder pages
 
-![Alt text](image.png)
+После запуска сервера, открыть библиотеку можно будет по адресу http://127.0.0.1:5500/
+
+
+
