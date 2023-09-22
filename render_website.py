@@ -1,3 +1,4 @@
+import argparse
 import os
 import json
 from pathlib import Path
@@ -6,24 +7,23 @@ from livereload import Server
 from more_itertools import chunked
 
 
-def get_book_descriptions():
+def get_book_descriptions(filename):
 
-    path_file = os.path.join('books', 'Catalog.json')
-
-    with open(path_file, "r", encoding='utf-8') as books:
+    with open(filename, "r", encoding='utf-8') as books:
         books_pages = books.read()
     books_descriptions = json.loads(books_pages)
 
     return books_descriptions
 
 
-def rebuild_page(folder):
+def rebuild_page(folder, filename):
+
     env = Environment(
         loader=FileSystemLoader(''),
         autoescape=select_autoescape(['html']))
 
     template = env.get_template('template.html')
-    book_descriptions = get_book_descriptions()
+    book_descriptions = get_book_descriptions(filename)
     group_books = list(chunked(book_descriptions, 2))
     page_group_books = list(chunked(group_books, 10))
 
@@ -38,14 +38,19 @@ def rebuild_page(folder):
 
 
 def main():
-    folder = 'pages'
-    Path(folder).mkdir(parents=True, exist_ok=True)
 
-    rebuild_page(folder)
+    parser = argparse.ArgumentParser(description='Рендеринг сохраненных книг')
+    parser.add_argument('--path_filename', help='Путь к файлу каталогу', default='books/Catalog.json', type=str)
+    parser.add_argument('--path_folder', help='Каталог для хранения файлов', default='pages', type=str)
+    arguments = parser.parse_args()
+
+    Path(arguments.path_folder).mkdir(parents=True, exist_ok=True)
+
+    rebuild_page(arguments.path_folder, arguments.path_filename)
 
     server = Server()
     server.watch('template.html', rebuild_page)
-    server.serve(root='', default_filename=f'{folder}/index1.html')
+    server.serve(root='', default_filename=f'{arguments.path_folder}/index1.html')
 
 
 if __name__ == '__main__':
