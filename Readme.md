@@ -65,6 +65,8 @@ Python3 должен быть уже установлен.
 
 После запуска сервера, открыть библиотеку можно будет по адресу http://127.0.0.1:5500/
 
+Как открыть offline библиотеку `pages/index1.html`
+
 Пример использования:
 ```bash
 >>>python parse_render_website.py --path_filename catalog.json --path_folder pages

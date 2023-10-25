@@ -32,7 +32,7 @@ def main():
     parser.add_argument('--end_page', help='Номер финальной страницы', default=2, type=int)
     parser.add_argument('--skip_imgs', help='Не скачивать картинки', action='store_true')
     parser.add_argument('--skip_txt', help='Не скачивать книги', action='store_true')
-    parser.add_argument('--dest_folder', help='Не скачивать книги', default='books', type=str)
+    parser.add_argument('--dest_folder', help='Не скачивать книги', default='media', type=str)
     arguments = parser.parse_args()
 
     pages = range(arguments.start_page, arguments.end_page + 1)
@@ -64,7 +64,7 @@ def main():
             response.raise_for_status()
             check_for_redirect(response)
             book_description = parse_book_page(response)
-            book_descriptions.append(book_description)
+            #book_descriptions.append(book_description)
 
             if not arguments.skip_txt:
                 response = requests.get(book_description['text_url'])
@@ -74,6 +74,8 @@ def main():
 
             if not arguments.skip_imgs:
                 download_image(book_description['image_url'], f'{arguments.dest_folder}/img')
+
+            book_descriptions.append(book_description)
 
         except requests.exceptions.HTTPError:
             logging.info(f'Не удалось скачать книгу: {book_description["book_name"]}')
